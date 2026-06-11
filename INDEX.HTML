@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Biblioteca</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+        h1 { margin-bottom: 1rem; }
+        h2 { margin-top: 0; }
+        form { display: grid; gap: .75rem; background:#f9f9f9; padding:1rem; border-radius:6px; box-shadow:0 1px 3px rgba(0,0,0,0.06); }
+        label { display:block; font-weight:600; font-size:0.95rem; }
+        input[type="text"], input[type="email"], input[type="number"] { width:100%; padding:.5rem; border:1px solid #ccc; border-radius:4px; font-size:1rem; box-sizing:border-box; }
+        .row { display:flex; gap: .5rem; }
+        .row > .field { flex:1; }
+        .actions { display:flex; gap:.5rem; align-items:center; }
+        .message { margin-top:.5rem; min-height:1.25rem; }
+        button { padding:.6rem 1rem; border:none; background:#007bff; color:#fff; border-radius:4px; cursor:pointer; }
+        button[type="reset"] { background:#6c757d; }
+        /* list/table styles */
+        #booksSection { margin-top: 1.5rem; }
+        table.books { width:100%; border-collapse:collapse; margin-top:.5rem; }
+        table.books th, table.books td { border:1px solid #e8e8ea; padding:.5rem; text-align:left; }
+        table.books th { background:#f4f6f8; font-weight:600; }
+        .empty { color:#666; }
+    </style>
+</head>
+<body>
+    <h1>Biblioteca — Cadastro de Livros</h1>
+
+    <form id="bookForm" novalidate>
+        <label for="titulo">Título</label>
+        <input type="text" id="titulo" name="titulo" required />
+
+        <label for="autor">Autor</label>
+        <input type="text" id="autor" name="autor" required />
+
+        <div class="row">
+            <div class="field">
+                <label for="ano_publicacao">Ano de publicação</label>
+                <input type="number" id="ano_publicacao" name="ano_publicacao" min="0" />
+            </div>
+            <div class="field">
+                <label for="quantidade_total">Quantidade total</label>
+                <input type="number" id="quantidade_total" name="quantidade_total" min="1" value="1" />
+            </div>
+        </div>
+
+        <label for="isbn">ISBN</label>
+        <input type="text" id="isbn" name="isbn" />
+
+        <div class="actions">
+            <button type="submit">Cadastrar</button>
+            <button type="reset">Limpar</button>
+        </div>
+
+        <div id="message" class="message" aria-live="polite"></div>
+    </form>
+
+    <section id="booksSection">
+        <h2>Livros cadastrados</h2>
+        <div class="actions">
+            <button id="loadBooksBtn" type="button">Buscar todos</button>
+        </div>
+        <div id="booksMessage" class="message" aria-live="polite"></div>
+        <div id="booksContainer"></div>
+    </section>
+
+    <script>
+        (function () {
+            const form = document.getElementById('bookForm');
+            const msg = document.getElementById('message');
+
+            form.addEventListener('submit', async function (e) {
+                e.preventDefault();
+                if (!form.checkValidity()) {
+                    form.reportValidity();
+                    return;
+                }
+
+                const payload = {
+                    titulo: document.getElementById('titulo').value.trim(),
+                    autor: document.getElementById('autor').value.trim(),
+                    ano_publicacao: Number(document.getElementById('ano_publicacao').value) || null,
+                    isbn: document.getElementById('isbn').value.trim(),
+                    quantidade_total: Number(document.getElementById('quantidade_total').value) || 0,
+                };
+
+                msg.style.color = '';
+                msg.textContent = 'Enviando...';
+
+                try {
+                    const res = await fetch('http://127.0.0.1:8000/livros/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload),
+                        mode: 'cors'
+                    });
+
+                    if (!res.ok) {
+                        let errText = await res.text().catch(()=>res.statusText || 'Erro');
+                        msg.style.color = 'crimson';
+                        msg.textContent = 'Erro: ' + errText;
+                        return;
+                    }
+
+                    await res.json().catch(()=>null);
+                    msg.style.color = 'green';
+                    msg.textContent = 'Livro cadastrado com sucesso!';
+                    form.reset();
+                } catch (err) {
+                    msg.style.color = 'crimson';
+                    msg.textContent = 'Falha na conexão: ' + (err.message || err);
+                }
+            });
+
+            /* Área para buscar e exibir todos os livros (GET) */
+            const BOOKS_API_URL = 'http://127.0.0.1:8000/livros/';
+            const loadBtn = document.getElementById('loadBooksBtn');
+            const booksMsg = document.getElementById('booksMessage');
+            const booksContainer = document.getElementById('booksContainer');
+
+            function escapeHtml(str) {
+                if (str === null || str === undefined) return '';
+                return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            }
+
+            async function loadBooks() {
+                booksMsg.style.color = '';
+                booksMsg.textContent = 'Carregando...';
+                booksContainer.innerHTML = '';
+
+                try {
+                    const resp = await fetch(BOOKS_API_URL, { method: 'GET', mode: 'cors' });
+                    if (!resp.ok) {
+                        const t = await resp.text().catch(()=>resp.statusText || 'Erro');
+                        booksMsg.style.color = 'crimson';
+                        booksMsg.textContent = 'Erro ao carregar: ' + t;
+                        return;
+                    }
+
+                    let data = await resp.json().catch(()=>null);
+                    let list = [];
+                    if (Array.isArray(data)) list = data;
+                    else if (data && Array.isArray(data.results)) list = data.results;
+                    else if (data && Array.isArray(data.livros)) list = data.livros;
+                    else if (data) list = [data];
+
+                    if (!list.length) {
+                        booksContainer.innerHTML = '<div class="empty">Nenhum livro cadastrado.</div>';
+                        booksMsg.textContent = '';
+                        return;
+                    }
+
+                    const table = document.createElement('table');
+                    table.className = 'books';
+                    table.innerHTML = '<thead><tr><th>Título</th><th>Autor</th><th>Ano</th><th>ISBN</th><th>Quantidade</th></tr></thead>';
+                    const tbody = document.createElement('tbody');
+
+                    list.forEach(item => {
+                        const tr = document.createElement('tr');
+                        const titulo = escapeHtml(item.titulo || item.title || item.nome || '');
+                        const autor = escapeHtml(item.autor || item.author || '');
+                        const ano = escapeHtml(item.ano_publicacao ?? item.ano ?? '');
+                        const isbn = escapeHtml(item.isbn || '');
+                        const qtd = escapeHtml(item.quantidade_total ?? item.quantidade ?? '');
+                        tr.innerHTML = `<td>${titulo}</td><td>${autor}</td><td>${ano}</td><td>${isbn}</td><td>${qtd}</td>`;
+                        tbody.appendChild(tr);
+                    });
+
+                    table.appendChild(tbody);
+                    booksContainer.appendChild(table);
+                    booksMsg.textContent = '';
+                } catch (err) {
+                    booksMsg.style.color = 'crimson';
+                    booksMsg.textContent = 'Falha na conexão: ' + (err.message || err);
+                }
+            }
+
+            loadBtn.addEventListener('click', loadBooks);
+        })();
+    </script>
+</body>
+</html>
