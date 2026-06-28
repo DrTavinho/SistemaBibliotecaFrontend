@@ -38,7 +38,7 @@
         h2 { margin-top: 0; }
         form { display: grid; gap: .75rem; background:#f9f9f9; padding:1rem; border-radius:6px; box-shadow:0 1px 3px rgba(0,0,0,0.06); }
         label { display:block; font-weight:600; font-size:0.95rem; }
-        input[type="text"], input[type="email"], input[type="number"] { width:100%; padding:.5rem; border:1px solid #ccc; border-radius:4px; font-size:1rem; box-sizing:border-box; }
+        input[type="text"], input[type="email"], input[type="number"], input[type="date"], select{ width:100%; padding:.5rem; border:1px solid #ccc; border-radius:4px; font-size:1rem; box-sizing:border-box; }
         .row { display:flex; gap: .5rem; }
         .row > .field { flex:1; }
         .actions { display:flex; gap:.5rem; align-items:center; }
@@ -46,10 +46,10 @@
         button { padding:.6rem 1rem; border:none; background:#007bff; color:#fff; border-radius:4px; cursor:pointer; }
         button[type="reset"] { background:#6c757d; }
         /* list/table styles */
-        #booksSection, #sociosSection { margin-top: 1.5rem; }
-        table.books, table.socios { width:100%; border-collapse:collapse; margin-top:.5rem; }
-        table.books th, table.books td, table.socios th, table.socios td { border:1px solid #e8e8ea; padding:.5rem; text-align:left; }
-        table.books th, table.socios th { background:#f4f6f8; font-weight:600; }
+        #booksSection, #sociosSection, #emprestimosSection, #emprestimos2Section { margin-top: 1.5rem; }
+        table.books, table.socios, table.emprestimos, table.emprestimos2 { width:100%; border-collapse:collapse; margin-top:.5rem; }
+        table.books th, table.books td, table.socios th, table.socios td, table.emprestimos th, table.emprestimos td, table.emprestimos2 th, table.emprestimos2 td { border:1px solid #e8e8ea; padding:.5rem; text-align:left; }
+        table.books th, table.socios th, table.emprestimos th, table.emprestimos2 th { background:#f4f6f8; font-weight:600; }
         .empty { color:#666; }
     </style>
 </head>
@@ -68,6 +68,8 @@
     <div class="menu" role="tablist" aria-label="Seções de cadastro">
         <button type="button" class="menu-btn active" data-target="bookPanel">Cadastro de Livros</button>
         <button type="button" class="menu-btn" data-target="sociosPanel">Cadastro de Sócios</button>
+        <button type="button" class="menu-btn" data-target="emprestimosPanel">Realizar Empréstimos</button>
+        <button type="button" class="menu-btn" data-target="emprestimos2Panel">Atualizar Empréstimos</button>
     </div>
 
     <section id="bookPanel" class="panel">
@@ -200,17 +202,18 @@
 
                         const table = document.createElement('table');
                         table.className = 'books';
-                        table.innerHTML = '<thead><tr><th>Título</th><th>Autor</th><th>Ano</th><th>ISBN</th><th>Quantidade</th></tr></thead>';
+                        table.innerHTML = '<thead><tr><th>ID</th><th>Título</th><th>Autor</th><th>Ano</th><th>ISBN</th><th>Quantidade</th></tr></thead>';
                         const tbody = document.createElement('tbody');
 
                         list.forEach(item => {
                             const tr = document.createElement('tr');
+                            const id = escapeHtml(item.id || '');
                             const titulo = escapeHtml(item.titulo || '');
                             const autor = escapeHtml(item.autor || '');
                             const ano = escapeHtml(item.ano_publicacao || '');
                             const isbn = escapeHtml(item.isbn || '');
                             const qtd = escapeHtml(item.quantidade_total || '');
-                            tr.innerHTML = `<td>${titulo}</td><td>${autor}</td><td>${ano}</td><td>${isbn}</td><td>${qtd}</td>`;
+                            tr.innerHTML = `<td>${id}</td><td>${titulo}</td><td>${autor}</td><td>${ano}</td><td>${isbn}</td><td>${qtd}</td>`;
                             tbody.appendChild(tr);
                         });
 
@@ -374,15 +377,16 @@
 
                         const table = document.createElement('table');
                         table.className = 'socios';
-                        table.innerHTML = '<thead><tr><th>Nome</th><th>E-Mail</th><th>Telefone</th></tr></thead>';
+                        table.innerHTML = '<thead><tr><th>ID</th><th>Nome</th><th>E-Mail</th><th>Telefone</th></tr></thead>';
                         const tbody = document.createElement('tbody');
 
                         list.forEach(item => {
                             const tr = document.createElement('tr');
+                            const id = escapeHtml(item.id || '');
                             const nome = escapeHtml(item.nome || '');
                             const email = escapeHtml(item.email || '');
                             const telefone = escapeHtml(item.telefone || '');
-                            tr.innerHTML = `<td>${nome}</td><td>${email}</td><td>${telefone}</td>`;
+                            tr.innerHTML = `<td>${id}</td><td>${nome}</td><td>${email}</td><td>${telefone}</td>`;
                             tbody.appendChild(tr);
                         });
 
@@ -405,8 +409,329 @@
     
 <!--HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH-->
 
+
+
+    <section id="emprestimosPanel" class="panel">
+
+        <h2>Realizar Empréstimos</h2>
+
+        <form id="emprestimoForm" novalidate>
+            <label for="livo_id">Id livro</label>
+            <input type="number" id="livro_id" name="livro_id" required />
+
+            <label for="socio_id">Id socio</label>
+            <input type="number" id="socio_id" name="socio_id" required />
+
+            <label for="data_prevista_devolucao">Data prevista de devolução</label>
+            <input type="date" id="data_prevista_devolucao" name="data_prevista_devolucao" />
+
+            <div class="actions">
+                <button type="button" id="realizarEmprestimoBtn">Realizar Empréstimo</button>
+                <button type="reset">Limpar</button>
+            </div>
+
+            <div id="emprestimoMessage" class="message" aria-live="polite"></div>
+        </form>
+
+        <section id="emprestimosSection">
+            <h2>Empréstimos cadastrados</h2>
+            <div class="actions">
+                <button id="loadEmprestimosBtn" type="button">Buscar todos</button>
+            </div>
+            <div id="emprestimosMessage" class="message" aria-live="polite"></div>
+            <div id="emprestimosContainer"></div>
+        </section>
+
+        <script>
+            (function () {
+                const form = document.getElementById('emprestimoForm');
+                const msg = document.getElementById('emprestimoMessage');
+                const realizarBtn = document.getElementById('realizarEmprestimoBtn');
+
+                async function realizarEmprestimo(e) {
+                    e.preventDefault();
+
+                    if (!form.checkValidity()) {
+                        form.reportValidity();
+                        return;
+                    }
+
+                    const payload = {
+                        livro_id: document.getElementById('livro_id').value.trim(),
+                        socio_id: document.getElementById('socio_id').value.trim(),
+                        data_prevista_devolucao: document.getElementById('data_prevista_devolucao').value.trim() || null
+                    };
+
+                    msg.style.color = '';
+                    msg.textContent = 'Enviando...';
+
+                    try {
+                        const res = await fetch('http://127.0.0.1:8000/emprestimos/', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload),
+                            mode: 'cors'
+                        });
+
+                        if (!res.ok) {
+                            let errText = await res.text().catch(()=>res.statusText || 'Erro');
+                            msg.style.color = 'crimson';
+                            msg.textContent = 'Erro: ' + errText;
+                            return;
+                        }
+
+                        await res.json().catch(()=>null);
+                        msg.style.color = 'green';
+                        msg.textContent = 'Empréstimo realizado com sucesso!';
+                        form.reset();
+                    } catch (err) {
+                        msg.style.color = 'crimson';
+                        msg.textContent = 'Falha na conexão: ' + (err.message || err);
+                    }
+                }
+
+                realizarBtn.addEventListener('click', realizarEmprestimo);
+
+                /* Área para buscar e exibir todos os emprestimos (GET) */
+                const EMPRESTIMOS_API_URL = 'http://127.0.0.1:8000/emprestimos/';
+                const loadBtn = document.getElementById('loadEmprestimosBtn');
+                const emprestimosMsg = document.getElementById('emprestimosMessage');
+                const emprestimosContainer = document.getElementById('emprestimosContainer');
+
+                function escapeHtml(str) {
+                    if (str === null || str === undefined) return '';
+                    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                }
+
+                async function loadEmprestimos() {
+                    emprestimosMsg.style.color = '';
+                    emprestimosMsg.textContent = 'Carregando...';
+                    emprestimosContainer.innerHTML = '';
+
+                    try {
+                        const resp = await fetch(EMPRESTIMOS_API_URL, { method: 'GET', mode: 'cors' });
+                        if (!resp.ok) {
+                            const t = await resp.text().catch(()=>resp.statusText || 'Erro');
+                            emprestimosMsg.style.color = 'crimson';
+                            emprestimosMsg.textContent = 'Erro ao carregar: ' + t;
+                            return;
+                        }
+
+                        let data = await resp.json().catch(()=>null);
+                        let list = [];
+                        if (Array.isArray(data)) list = data;
+                        else if (data && Array.isArray(data.results)) list = data.results;
+                        else if (data && Array.isArray(data.emprestimos)) list = data.emprestimos;
+                        else if (data) list = [data];
+
+                        if (!list.length) {
+                            emprestimosContainer.innerHTML = '<div class="empty">Nenhum empréstimo cadastrado.</div>';
+                            emprestimosMsg.textContent = '';
+                            return;
+                        }
+
+                        const table = document.createElement('table');
+                        table.className = 'emprestimos';
+                        table.innerHTML = '<thead><tr><th>Livro ID</th><th>Sócio ID</th><th>Data do Emprestimo</th><th>Devolução Prevista</th><th>Data de Devolução</th><th>Status</th></tr></thead>';
+                        const tbody = document.createElement('tbody');
+
+                        list.forEach(item => {
+                            const tr = document.createElement('tr');
+                            const livro_id = escapeHtml(item.livro_id || '');
+                            const socio_id = escapeHtml(item.socio_id || '');
+                            const data_emprestimo = escapeHtml(item.data_emprestimo || '');
+                            const data_prevista_devolucao = escapeHtml(item.data_prevista_devolucao || '');
+                            const data_devolucao = escapeHtml(item.data_devolucao || '');
+                            const status = escapeHtml(item.status || '');
+                            tr.innerHTML = `<td>${livro_id}</td><td>${socio_id}</td><td>${data_emprestimo}</td><td>${data_prevista_devolucao}</td><td>${data_devolucao}</td><td>${status}</td>`;
+                            tbody.appendChild(tr);
+                        });
+
+                        table.appendChild(tbody);
+                        emprestimosContainer.appendChild(table);
+                        emprestimosMsg.textContent = '';
+                    } catch (err) {
+                        emprestimosMsg.style.color = 'crimson';
+                        emprestimosMsg.textContent = 'Falha na conexão: ' + (err.message || err);
+                    }
+                }
+
+                loadBtn.addEventListener('click', loadEmprestimos);
+            })();
+        </script>
+
+    </section>
+
+
+<!--HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH-->
+
+
+
+    <section id="emprestimos2Panel" class="panel">
+
+        <h2>Atualizar Empréstimos</h2>
+
+        <form id="emprestimo2Form" novalidate>
+            <label for="id">ID Empréstimo</label>
+            <input type="number" id="id" name="id" required />
+
+            <label for="status">Status</label>
+            <select id="status" name="status">
+                <option value="aberto">Aberto</option>
+                <option value="devolvido">Devolvido</option>
+                <option value="cancelado">Cancelado</option>
+            </select>
+
+            <label for="data_prevista_devolucao">Data prevista de devolução</label>
+            <input type="date" id="data_prevista_devolucao" name="data_prevista_devolucao" />
+
+            <div class="actions">
+                <button type="button" id="atualizarEmprestimoBtn">Atualizar Empréstimo</button>
+                <button type="reset">Limpar</button>
+            </div>
+
+            <div id="emprestimo2Message" class="message" aria-live="polite"></div>
+        </form>
+
+        <section id="emprestimos2Section">
+            <h2>Empréstimos cadastrados</h2>
+            <div class="actions">
+                <button id="loadEmprestimos2Btn" type="button">Buscar todos</button>
+            </div>
+            <div id="emprestimos2Message" class="message" aria-live="polite"></div>
+            <div id="emprestimos2Container"></div>
+        </section>
+
+        <script>
+            (function () {
+                const form = document.getElementById('emprestimo2Form');
+                const msg = document.getElementById('emprestimo2Message');
+                const atualizarBtn = document.getElementById('atualizarEmprestimoBtn');
+
+                async function atualizarEmprestimo(e) {
+                    e.preventDefault();
+
+                    if (!form.checkValidity()) {
+                        form.reportValidity();
+                        return;
+                    }
+
+                    const id = document.getElementById('id').value.trim();
+                    const payload = {
+                        status: document.getElementById('status').value,
+                        data_prevista_devolucao: document.getElementById('data_prevista_devolucao').value.trim() || null
+                    };
+
+                    msg.style.color = '';
+                    msg.textContent = 'Enviando...';
+
+                    try {
+                        const res = await fetch(`http://127.0.0.1:8000/emprestimos/${id}/`, {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload),
+                            mode: 'cors'
+                        });
+
+                        if (!res.ok) {
+                            let errText = await res.text().catch(() => res.statusText || 'Erro');
+                            msg.style.color = 'crimson';
+                            msg.textContent = 'Erro: ' + errText;
+                            return;
+                        }
+
+                        await res.json().catch(() => null);
+                        msg.style.color = 'green';
+                        msg.textContent = 'Empréstimo atualizado com sucesso!';
+                        form.reset();
+                    } catch (err) {
+                        msg.style.color = 'crimson';
+                        msg.textContent = 'Falha na conexão: ' + (err.message || err);
+                    }
+                }
+
+                if (atualizarBtn) {
+                    atualizarBtn.addEventListener('click', atualizarEmprestimo);
+                }
+
+                /* Área para buscar e exibir todos os emprestimos (GET) */
+                const EMPRESTIMOS_API_URL = 'http://127.0.0.1:8000/emprestimos/';
+                const loadBtn = document.getElementById('loadEmprestimos2Btn');
+                const emprestimosMsg = document.getElementById('emprestimos2Message');
+                const emprestimosContainer = document.getElementById('emprestimos2Container');
+
+                function escapeHtml(str) {
+                    if (str === null || str === undefined) return '';
+                    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                }
+
+                async function loadEmprestimos() {
+                    emprestimosMsg.style.color = '';
+                    emprestimosMsg.textContent = 'Carregando...';
+                    emprestimosContainer.innerHTML = '';
+
+                    try {
+                        const resp = await fetch(EMPRESTIMOS_API_URL, { method: 'GET', mode: 'cors' });
+                        if (!resp.ok) {
+                            const t = await resp.text().catch(() => resp.statusText || 'Erro');
+                            emprestimosMsg.style.color = 'crimson';
+                            emprestimosMsg.textContent = 'Erro ao carregar: ' + t;
+                            return;
+                        }
+
+                        let data = await resp.json().catch(() => null);
+                        let list = [];
+                        if (Array.isArray(data)) list = data;
+                        else if (data && Array.isArray(data.results)) list = data.results;
+                        else if (data && Array.isArray(data.emprestimos)) list = data.emprestimos;
+                        else if (data) list = [data];
+
+                        if (!list.length) {
+                            emprestimosContainer.innerHTML = '<div class="empty">Nenhum empréstimo cadastrado.</div>';
+                            emprestimosMsg.textContent = '';
+                            return;
+                        }
+
+                        const table = document.createElement('table');
+                        table.className = 'emprestimos';
+                        table.innerHTML = '<thead><tr><th>Livro ID</th><th>Sócio ID</th><th>Data do Emprestimo</th><th>Devolução Prevista</th><th>Data de Devolução</th><th>Status</th></tr></thead>';
+                        const tbody = document.createElement('tbody');
+
+                        list.forEach(item => {
+                            const tr = document.createElement('tr');
+                            const livro_id = escapeHtml(item.livro_id || '');
+                            const socio_id = escapeHtml(item.socio_id || '');
+                            const data_emprestimo = escapeHtml(item.data_emprestimo || '');
+                            const data_prevista_devolucao = escapeHtml(item.data_prevista_devolucao || '');
+                            const data_devolucao = escapeHtml(item.data_devolucao || '');
+                            const status = escapeHtml(item.status || '');
+                            tr.innerHTML = `<td>${livro_id}</td><td>${socio_id}</td><td>${data_emprestimo}</td><td>${data_prevista_devolucao}</td><td>${data_devolucao}</td><td>${status}</td>`;
+                            tbody.appendChild(tr);
+                        });
+
+                        table.appendChild(tbody);
+                        emprestimosContainer.appendChild(table);
+                        emprestimosMsg.textContent = '';
+                    } catch (err) {
+                        emprestimosMsg.style.color = 'crimson';
+                        emprestimosMsg.textContent = 'Falha na conexão: ' + (err.message || err);
+                    }
+                }
+
+                if (loadBtn) {
+                    loadBtn.addEventListener('click', loadEmprestimos);
+                }
+            })();
+        </script>
+
+    </section>
+
+
+
+<!--HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH-->
+
     
-    
+
     <script>
         const menuButtons = document.querySelectorAll('.menu-btn');
         const panels = document.querySelectorAll('.panel');
