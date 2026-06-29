@@ -9,11 +9,16 @@ API REST para controle de livros, sócios e empréstimos, desenvolvida com **Fas
 | Camada       | Tecnologia                  |
 |--------------|-----------------------------|
 | Linguagem    | Python 3.12                 |
-| Framework    | FastAPI 0.111                |
+| Framework    | FastAPI 0.111               |
 | ORM          | SQLAlchemy 2.0              |
 | Banco        | PostgreSQL 16               |
 | Containers   | Docker + Docker Compose     |
 | Editor       | VSCode                      |
+
+---
+
+## Arquitetura do projeto
+<img width="565" height="410" alt="image" src="https://github.com/user-attachments/assets/65155e73-3f4e-4783-92dc-e8f0a8e55435" />
 
 ---
 
