@@ -1,0 +1,11 @@
+services:
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: biblioteca_frontend_dev
+    ports:
+      - "5500:80"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

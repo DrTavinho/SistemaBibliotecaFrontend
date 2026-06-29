@@ -69,7 +69,7 @@
         <button type="button" class="menu-btn active" data-target="bookPanel">Cadastro de Livros</button>
         <button type="button" class="menu-btn" data-target="sociosPanel">Cadastro de Sócios</button>
         <button type="button" class="menu-btn" data-target="emprestimosPanel">Realizar Empréstimos</button>
-        <button type="button" class="menu-btn" data-target="emprestimos2Panel">Atualizar Empréstimos</button>
+        <button type="button" class="menu-btn" data-target="emprestimos2Panel">Devolver Empréstimos</button>
     </div>
 
     <section id="bookPanel" class="panel">
@@ -131,7 +131,7 @@
                         autor: document.getElementById('autor').value.trim(),
                         ano_publicacao: Number(document.getElementById('ano_publicacao').value) || null,
                         isbn: document.getElementById('isbn').value.trim(),
-                        quantidade_total: Number(document.getElementById('quantidade_total').value) || 0,
+                        quantidade_total: Number(document.getElementById('quantidade_disponivel').value) || 0,
                     };
 
                     msg.style.color = '';
@@ -212,7 +212,7 @@
                             const autor = escapeHtml(item.autor || '');
                             const ano = escapeHtml(item.ano_publicacao || '');
                             const isbn = escapeHtml(item.isbn || '');
-                            const qtd = escapeHtml(item.quantidade_total || '');
+                            const qtd = escapeHtml(item.quantidade_disponivel || '0');
                             tr.innerHTML = `<td>${id}</td><td>${titulo}</td><td>${autor}</td><td>${ano}</td><td>${isbn}</td><td>${qtd}</td>`;
                             tbody.appendChild(tr);
                         });
@@ -416,10 +416,10 @@
         <h2>Realizar Empréstimos</h2>
 
         <form id="emprestimoForm" novalidate>
-            <label for="livo_id">Id livro</label>
+            <label for="livo_id">Id Livro</label>
             <input type="number" id="livro_id" name="livro_id" required />
 
-            <label for="socio_id">Id socio</label>
+            <label for="socio_id">Id Sócio</label>
             <input type="number" id="socio_id" name="socio_id" required />
 
             <label for="data_prevista_devolucao">Data prevista de devolução</label>
@@ -532,18 +532,19 @@
 
                         const table = document.createElement('table');
                         table.className = 'emprestimos';
-                        table.innerHTML = '<thead><tr><th>Livro ID</th><th>Sócio ID</th><th>Data do Emprestimo</th><th>Devolução Prevista</th><th>Data de Devolução</th><th>Status</th></tr></thead>';
+                        table.innerHTML = '<thead><tr><th>ID</th><th>Livro ID</th><th>Sócio ID</th><th>Data do Emprestimo</th><th>Devolução Prevista</th><th>Data de Devolução</th><th>Status</th></tr></thead>';
                         const tbody = document.createElement('tbody');
 
                         list.forEach(item => {
                             const tr = document.createElement('tr');
+                            const id = escapeHtml(item.id || '');
                             const livro_id = escapeHtml(item.livro_id || '');
                             const socio_id = escapeHtml(item.socio_id || '');
                             const data_emprestimo = escapeHtml(item.data_emprestimo || '');
                             const data_prevista_devolucao = escapeHtml(item.data_prevista_devolucao || '');
                             const data_devolucao = escapeHtml(item.data_devolucao || '');
                             const status = escapeHtml(item.status || '');
-                            tr.innerHTML = `<td>${livro_id}</td><td>${socio_id}</td><td>${data_emprestimo}</td><td>${data_prevista_devolucao}</td><td>${data_devolucao}</td><td>${status}</td>`;
+                            tr.innerHTML = `<td>${id}</td><td>${livro_id}</td><td>${socio_id}</td><td>${data_emprestimo}</td><td>${data_prevista_devolucao}</td><td>${data_devolucao}</td><td>${status}</td>`;
                             tbody.appendChild(tr);
                         });
 
@@ -569,24 +570,24 @@
 
     <section id="emprestimos2Panel" class="panel">
 
-        <h2>Atualizar Empréstimos</h2>
+        <h2>Devolver Empréstimos</h2>
 
         <form id="emprestimo2Form" novalidate>
             <label for="id">ID Empréstimo</label>
             <input type="number" id="id" name="id" required />
 
-            <label for="status">Status</label>
+            <!-- <label for="status">Status</label> 
             <select id="status" name="status">
                 <option value="aberto">Aberto</option>
                 <option value="devolvido">Devolvido</option>
                 <option value="cancelado">Cancelado</option>
-            </select>
+            </select> -->
 
-            <label for="data_prevista_devolucao">Data prevista de devolução</label>
-            <input type="date" id="data_prevista_devolucao" name="data_prevista_devolucao" />
+            <!-- <label for="data_prevista_devolucao">Data prevista de devolução</label>
+            <input type="date" id="data_prevista_devolucao" name="data_prevista_devolucao" /> -->
 
             <div class="actions">
-                <button type="button" id="atualizarEmprestimoBtn">Atualizar Empréstimo</button>
+                <button type="button" id="atualizarEmprestimoBtn">Devolver Empréstimo</button>
                 <button type="reset">Limpar</button>
             </div>
 
@@ -618,15 +619,16 @@
 
                     const id = document.getElementById('id').value.trim();
                     const payload = {
-                        status: document.getElementById('status').value,
-                        data_prevista_devolucao: document.getElementById('data_prevista_devolucao').value.trim() || null
+                        //status: document.getElementById('status').value,
+                        //data_prevista_devolucao: document.getElementById('data_prevista_devolucao').value.trim() || null
+                        id: document.getElementById('id').value,
                     };
 
                     msg.style.color = '';
                     msg.textContent = 'Enviando...';
 
                     try {
-                        const res = await fetch(`http://127.0.0.1:8000/emprestimos/${id}/`, {
+                        const res = await fetch(`http://127.0.0.1:8000/emprestimos/${id}/devolver`, {
                             method: 'PATCH',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(payload),
@@ -694,18 +696,19 @@
 
                         const table = document.createElement('table');
                         table.className = 'emprestimos';
-                        table.innerHTML = '<thead><tr><th>Livro ID</th><th>Sócio ID</th><th>Data do Emprestimo</th><th>Devolução Prevista</th><th>Data de Devolução</th><th>Status</th></tr></thead>';
+                        table.innerHTML = '<thead><tr><th>ID</th><th>Livro ID</th><th>Sócio ID</th><th>Data do Emprestimo</th><th>Devolução Prevista</th><th>Data de Devolução</th><th>Status</th></tr></thead>';
                         const tbody = document.createElement('tbody');
 
                         list.forEach(item => {
                             const tr = document.createElement('tr');
+                            const id = escapeHtml(item.id || '');
                             const livro_id = escapeHtml(item.livro_id || '');
                             const socio_id = escapeHtml(item.socio_id || '');
                             const data_emprestimo = escapeHtml(item.data_emprestimo || '');
                             const data_prevista_devolucao = escapeHtml(item.data_prevista_devolucao || '');
                             const data_devolucao = escapeHtml(item.data_devolucao || '');
                             const status = escapeHtml(item.status || '');
-                            tr.innerHTML = `<td>${livro_id}</td><td>${socio_id}</td><td>${data_emprestimo}</td><td>${data_prevista_devolucao}</td><td>${data_devolucao}</td><td>${status}</td>`;
+                            tr.innerHTML = `<td>${id}</td><td>${livro_id}</td><td>${socio_id}</td><td>${data_emprestimo}</td><td>${data_prevista_devolucao}</td><td>${data_devolucao}</td><td>${status}</td>`;
                             tbody.appendChild(tr);
                         });
 
